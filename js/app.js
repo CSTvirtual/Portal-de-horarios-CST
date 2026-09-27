@@ -1,0 +1,31 @@
+(()=>{
+ const {DAYS,esc,mins,fmt,overlaps,statusAt,stateClass,ALL,registerSection}=window.CST;
+ registerSection(window.CST_SECTION_DATA);
+ // Cross-section data may already be loaded by the page as CST_ALL_SECTION_DATA.
+ (window.CST_ALL_SECTION_DATA||[]).forEach(registerSection);
+ const section=window.CST_SECTION_DATA.section;
+ const sectionTeachers=(window.CST_TEACHERS||[]).filter(t=>t.sections.includes(section));
+ const byId=id=>document.getElementById(id);
+
+ document.querySelectorAll('.tab').forEach(btn=>btn.addEventListener('click',()=>{document.querySelectorAll('.tab').forEach(b=>b.classList.remove('active'));document.querySelectorAll('.panel').forEach(p=>p.classList.remove('active'));btn.classList.add('active');byId(btn.dataset.panel).classList.add('active')}));
+
+ // --- Schedule view ---
+ const daySel=byId('scheduleDay');
+ DAYS.forEach(d=>daySel.add(new Option(d,d)));
+ const courses=[...new Set([...(window.CST_SECTION_DATA.exact||[]),...(window.CST_SECTION_DATA.tentative||[]),...(window.CST_SECTION_DATA.unassigned||[])].map(e=>e.course))];
+ const courseOrder={Preescolar:['PREJARDÍN A','PREJARDÍN B','JARDÍN A','JARDÍN B','TRANSICIÓN A','TRANSICIÓN B'],Primaria:['PRIMERO','SEGUNDO','TERCERO','CUARTO','QUINTO'],Bachillerato:['SEXTO','SÉPTIMO','OCTAVO','NOVENO','DÉCIMO','ONCE']}[section]||courses;
+ function renderSchedule(){const day=daySel.value;const blocks=(window.CST_SECTION_DATA.scheduleBlocks||[]).filter(b=>b.day===day).sort((a,b)=>mins(a.start)-mins(b.start));byId('scheduleHead').innerHTML=`<tr><th>Hora</th>${courseOrder.map(c=>`<th>${esc(c)}</th>`).join('')}</tr>`;byId('scheduleBody').innerHTML=blocks.map(b=>`<tr><td class="time-cell">${fmt(b.start)}<br>${fmt(b.end)}</td>${courseOrder.map(c=>{const ex=(window.CST_SECTION_DATA.exact||[]).filter(e=>e.day===day&&e.start===b.start&&e.end===b.end&&e.course===c);const te=(window.CST_SECTION_DATA.tentative||[]).filter(e=>e.day===day&&e.start===b.start&&e.end===b.end&&e.course===c);const un=(window.CST_SECTION_DATA.unassigned||[]).filter(e=>e.day===day&&e.start===b.start&&e.end===b.end&&e.course===c);if(ex.length){const names=[...new Set(ex.map(e=>e.teacher))];return `<td>${names.map(n=>`<span class="teacher-chip">${esc(n)}</span>`).join('')}<span class="subject-note">${esc(ex[0].subject)}</span></td>`}if(te.length){const names=[...new Set(te.flatMap(e=>e.teachers||[]))];return `<td>${names.map(n=>`<span class="teacher-chip tentative">${esc(n)}</span>`).join('')}<span class="subject-note">${esc(te[0].subject)} · por confirmar</span></td>`}if(un.length)return `<td><span class="unknown">Docente por identificar</span><span class="subject-note">${esc(un[0].subject)}</span></td>`;return '<td>—</td>'}).join('')}</tr>`).join('')}
+ daySel.addEventListener('change',renderSchedule);renderSchedule();
+
+ // --- Availability by day/time ---
+ const availDay=byId('availDay'), availTime=byId('availTime'), teacherSearch=byId('teacherSearch');DAYS.forEach(d=>availDay.add(new Option(d,d)));
+ function eventText(s){if(!s.events.length)return '';return s.events.map(e=>`${esc(e.course)} · ${esc(e.subject)} <small>${esc(e.section)}</small>`).join('<br>')}
+ function renderAvailability(){const day=availDay.value,time=availTime.value||'10:10',q=(teacherSearch.value||'').trim().toLocaleLowerCase('es');let rows=sectionTeachers.filter(t=>!q||t.name.toLocaleLowerCase('es').includes(q)||t.subjects.join(' ').toLocaleLowerCase('es').includes(q)).map(t=>({t,s:statusAt(t,day,time)}));const order={free:0,busy:1,maybe:2,off:3};rows.sort((a,b)=>order[a.s.kind]-order[b.s.kind]||a.t.name.localeCompare(b.t.name,'es'));const counts={free:0,busy:0,maybe:0,off:0};rows.forEach(r=>counts[r.s.kind]++);byId('availabilitySummary').innerHTML=[['free','Disponibles'],['busy','En clase'],['maybe','Por confirmar'],['off','Fuera de jornada']].map(([k,l])=>`<div class="summary-box"><strong>${counts[k]}</strong><span>${l}</span></div>`).join('');byId('teacherGrid').innerHTML=rows.map(({t,s})=>`<article class="teacher-card ${stateClass(s.kind)}"><span class="status ${stateClass(s.kind)}">${esc(s.label)}</span><h3>${esc(t.name)}</h3><p>${s.kind==='free'?'Sin clase identificada en esta hora.':s.kind==='off'?'No está dentro de su jornada registrada.':eventText(s)}</p><small>${esc(t.subjects.join(' · '))}</small></article>`).join('')}
+ [availDay,availTime].forEach(x=>x.addEventListener('change',renderAvailability));teacherSearch.addEventListener('input',renderAvailability);renderAvailability();
+
+ // --- Free hours by teacher, real section blocks ---
+ const freeTeacher=byId('freeTeacher');sectionTeachers.forEach(t=>freeTeacher.add(new Option(t.name,t.name)));
+ function statusBlock(t,b){const labor=t.labor?.[b.day];if(!labor||mins(b.start)<mins(labor.start)||mins(b.end)>mins(labor.end))return{kind:'off',label:'Fuera de jornada',events:[]};const ex=ALL.exact.filter(e=>e.teacher===t.name&&e.day===b.day&&overlaps(e.start,e.end,b.start,b.end));if(ex.length)return{kind:'busy',label:'En clase',events:ex};const te=ALL.tentative.filter(e=>e.teachers?.includes(t.name)&&e.day===b.day&&overlaps(e.start,e.end,b.start,b.end));if(te.length)return{kind:'maybe',label:'Por confirmar',events:te};return{kind:'free',label:'Disponible',events:[]}}
+ function renderFreeWeek(){const t=sectionTeachers.find(x=>x.name===freeTeacher.value)||sectionTeachers[0];if(!t)return;const blocks=(window.CST_SECTION_DATA.scheduleBlocks||[]).slice().sort((a,b)=>DAYS.indexOf(a.day)-DAYS.indexOf(b.day)||mins(a.start)-mins(b.start));byId('freeWeek').innerHTML=blocks.map(b=>{const s=statusBlock(t,b);const d=s.events.length?s.events.map(e=>`${esc(e.course)} · ${esc(e.subject)} <small>${esc(e.section)}</small>`).join('<br>'):s.kind==='free'?'Sin clase identificada en este bloque.':'—';return `<div class="week-row"><div class="week-day">${esc(b.day)}</div><div class="week-time">${fmt(b.start)}–${fmt(b.end)}</div><div class="week-state ${stateClass(s.kind)}">${esc(s.label)}</div><div class="week-detail">${d}</div></div>`}).join('')}
+ freeTeacher.addEventListener('change',renderFreeWeek);renderFreeWeek();
+})();
