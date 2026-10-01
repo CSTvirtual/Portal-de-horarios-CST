@@ -1,0 +1,32 @@
+<!doctype html><html lang="es"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Preescolar · Portal San Tarsicio</title><link rel="stylesheet" href="css/styles.css"></head><body><header class="brandbar"><div class="shell brandbar__inner"><img class="brand-logo" src="img/escudo-san-tarsicio.jpg" alt="Escudo Colegio San Tarsicio"><div class="brand-center"><strong>SAN TARSICIO</strong><span>Fundado en 1961 · Portal institucional de horarios</span></div><img class="efqm" src="img/efqm.png" alt="EFQM Recognised"></div></header><nav class="topnav"><div class="shell topnav__inner"><a href="index.html">Inicio</a><a class="active" href="preescolar.html">Preescolar</a><a class="" href="primaria.html">Primaria</a><a class="" href="bachillerato.html">Bachillerato</a></div></nav><section class="hero"><div class="shell"><p class="eyebrow">Preescolar</p><h1>Prejardín, Jardín y Transición</h1><p>El estado de cada docente se verifica contra las tres secciones del colegio para detectar profesores compartidos.</p></div></section><main class="shell main"><section class="card"><div class="tabs"><button class="tab active" data-panel="panelSchedule">Horario de la sección</button><button class="tab" data-panel="panelAvailability">Disponibilidad por día y hora</button><button class="tab" data-panel="panelFree">Horas libres de un docente</button><button class="tab" data-panel="panelCoverage">Coberturas por ausencia</button></div><div id="panelSchedule" class="panel active"><p class="section-label">Horario por nombres</p><h2>¿Quién dicta cada clase?</h2><div class="controls" style="grid-template-columns:minmax(180px,260px)"><div class="field"><span>Día</span><select id="scheduleDay"></select></div></div><div class="table-wrap" style="margin-top:14px"><table class="schedule-table"><thead id="scheduleHead"></thead><tbody id="scheduleBody"></tbody></table></div></div><div id="panelAvailability" class="panel"><p class="section-label">Consulta rápida</p><h2>Profesores disponibles</h2><div class="controls"><div class="field"><span>Día</span><select id="availDay"></select></div><div class="field"><span>Hora</span><input id="availTime" type="time" value="10:10"></div><div class="field" style="grid-column:span 2"><span>Buscar docente</span><input id="teacherSearch" type="search" placeholder="Nombre o asignatura"></div></div><div class="legend"><span><i class="dot free"></i>Disponible</span><span><i class="dot busy"></i>En clase</span><span><i class="dot maybe"></i>Por confirmar</span><span><i class="dot off"></i>Fuera de jornada</span></div><div id="availabilitySummary" class="summary"></div><div id="teacherGrid" class="teacher-grid"></div></div><div id="panelFree" class="panel"><p class="section-label">Consulta semanal</p><h2>Horas libres de un docente</h2><div class="controls" style="grid-template-columns:minmax(220px,360px)"><div class="field"><span>Docente</span><select id="freeTeacher"></select></div></div><div class="notice" style="margin:14px 0">Se muestran exclusivamente las franjas lectivas reales de Preescolar. Recreos, descansos y pausas institucionales no se convierten en bloques disponibles.</div><div id="freeWeek" class="week-list"></div></div>
+<div id="panelCoverage" class="panel">
+  <p class="section-label">Coberturas por ausencia</p>
+  <h2>Buscar reemplazos</h2>
+  <p class="panel-intro">
+    Selecciona al docente ausente y los días de incapacidad o permiso. El portal revisa sus clases,
+    descarta docentes ocupados o fuera de jornada y propone una rotación para evitar cargar siempre a la misma persona.
+  </p>
+
+  <div class="coverage-controls">
+    <div class="field">
+      <span>Docente ausente</span>
+      <select id="coverageTeacher"></select>
+    </div>
+    <div class="field">
+      <span>Días de ausencia</span>
+      <div id="coverageDays" class="day-checks"></div>
+    </div>
+    <div class="field coverage-action">
+      <span>&nbsp;</span>
+      <button id="coverageButton" class="btn btn-primary" type="button">Calcular coberturas</button>
+    </div>
+  </div>
+
+  <div class="notice" style="margin:14px 0">
+    Esta herramienta es una simulación: no modifica el horario oficial. La recomendación considera compatibilidad,
+    sección, disponibilidad restante y carga de coberturas dentro del plan generado.
+  </div>
+
+  <div id="coverageResults"></div>
+</div>
+</section></main><footer class="footer"><div class="shell footer__inner"><span>Colegio San Tarsicio · Portal de horarios 2026–2027</span><span>GitHub Pages · sitio estático</span></div></footer><script src="datos/profesores.js"></script><script src="datos/primaria.js"></script><script>window.CST_ALL_SECTION_DATA=(window.CST_ALL_SECTION_DATA||[]).concat([window.CST_SECTION_DATA]);</script><script src="datos/bachillerato.js"></script><script>window.CST_ALL_SECTION_DATA=(window.CST_ALL_SECTION_DATA||[]).concat([window.CST_SECTION_DATA]);</script><script src="datos/preescolar.js"></script><script src="js/utils.js"></script><script src="js/app.js"></script></body></html>
